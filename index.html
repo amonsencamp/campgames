@@ -112,7 +112,9 @@ function update() {
       }
 
       // Ground hit
-      if (sandwich && sandwich.y > 260) {
+    const groundY = canvas.height - tileHeight;
+
+if (sandwich && sandwich.y > groundY) {
         sandwich = null;
       }
     }
@@ -130,13 +132,25 @@ function update() {
 
 // Draw everything
 function draw() {
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+ ctx.fillStyle = "#8dc2e3";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Ground
-  ctx.fillStyle = "#003300";
-  ctx.fillRect(0, 260, 600, 40);
+const groundTile = new Image();
+groundTile.src = "assets/bg-tile.png";
+const tileWidth = 32;
+const tileHeight = 32;
 
+// Start drawing tiles aligned to the bottom
+for (let x = 0; x < canvas.width; x += tileWidth) {
+  ctx.drawImage(
+    groundTile,
+    x,
+    canvas.height - tileHeight,
+    tileWidth,
+    tileHeight
+  );
+}
   // Catapult
   ctx.fillStyle = "#00ff88";
   ctx.fillRect(80, 230, 40, 10);
