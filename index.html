@@ -2,25 +2,21 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>A Sandwich For Pop-Pop</title>
+<title>LUNCH LAUNCH 2000</title>
 <style>
   body {
     background: black;
-    color: #00ff88;
-    font-family: monospace;
-    text-align: center;
+    margin: 0;
+    overflow: hidden;
   }
   canvas {
-    border: 0px;
+    display: block;
+    margin: auto;
     image-rendering: pixelated;
-    margin-top: 20px;
   }
 </style>
 </head>
 <body>
-
-<h1>A Sandwich For Pop-Pop</h1>
-<p>HOLD SPACE TO AIM • RELEASE TO THROW</p>
 
 <canvas id="game" width="600" height="300"></canvas>
 
@@ -28,7 +24,26 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-// Game state
+// =======================
+// GAME STATE
+// =======================
+let gameState = "title"; // "title", "playing"
+
+// =======================
+// ASSETS (LOAD ONCE)
+// =======================
+const titleImage = new Image();
+titleImage.src = "assets/title.png";
+
+const groundTile = new Image();
+groundTile.src = "assets/bg-tile.png";
+
+const tileWidth = 32;
+const tileHeight = 64;
+
+// =======================
+// GAME VARIABLES
+// =======================
 let angle = 45;
 let aimingUp = true;
 let isHolding = false;
@@ -48,9 +63,21 @@ const jeff = {
   happyTimer: 0
 };
 
-// Input
+// =======================
+// INPUT
+// =======================
 document.addEventListener("keydown", e => {
-  if (e.code === "Space") isHolding = true;
+  if (e.code === "Space") {
+
+    if (gameState === "title") {
+      startGame();
+      return;
+    }
+
+    if (!gameOver) {
+      isHolding = true;
+    }
+  }
 
   if (gameOver && initials.length < 3) {
     if (/^[a-zA-Z]$/.test(e.key)) {
@@ -60,11 +87,23 @@ document.addEventListener("keydown", e => {
 });
 
 document.addEventListener("keyup", e => {
-  if (e.code === "Space" && !gameOver) {
+  if (e.code === "Space" && gameState === "playing" && !gameOver) {
     isHolding = false;
     if (!sandwich && shots > 0) launchSandwich();
   }
 });
+
+// =======================
+// GAME FUNCTIONS
+// =======================
+function startGame() {
+  gameState = "playing";
+  score = 0;
+  shots = 5;
+  sandwich = null;
+  gameOver = false;
+  initials = "";
+}
 
 function launchSandwich() {
   let power = 8;
@@ -74,88 +113,122 @@ function launchSandwich() {
     x: 100,
     y: 220,
     vx: Math.cos(rad) * power,
-    vy: -Math.sin(rad) * power,
-    alive: true
+    vy: -Math.sin(rad) * power
   };
 
   shots--;
 }
 
-// Game loop
+// =======================
+// GAME LOOP
+// =======================
 function update() {
-  if (!gameOver) {
-    // Aim oscillation
-    if (isHolding) {
-      if (aimingUp) angle += 1.5;
-      else angle -= 1.5;
 
-      if (angle >= 90) aimingUp = false;
-      if (angle <= 0) aimingUp = true;
-    }
+  if (gameState === "playing") {
 
-    // Sandwich physics
-    if (sandwich) {
-      sandwich.x += sandwich.vx;
-      sandwich.y += sandwich.vy;
-      sandwich.vy += gravity;
+    if (!gameOver) {
+      // Aim oscillation
+      if (isHolding) {
+        if (aimingUp) angle += 1.5;
+        else angle -= 1.5;
 
-      // Hit Jeff
-      if (
-        sandwich.x > jeff.x &&
-        sandwich.x < jeff.x + jeff.width &&
-        sandwich.y > jeff.y &&
-        sandwich.y < jeff.y + jeff.height
-      ) {
-        score++;
-        jeff.happyTimer = 30;
-        sandwich = null;
+        if (angle >= 90) aimingUp = false;
+        if (angle <= 0) aimingUp = true;
       }
 
-      // Ground hit
-    const groundY = canvas.height - tileHeight;
+      // Sandwich physics
+      if (sandwich) {
+        sandwich.x += sandwich.vx;
+        sandwich.y += sandwich.vy;
+        sandwich.vy += gravity;
 
-if (sandwich && sandwich.y > groundY) {
-        sandwich = null;
+        // Hit Jeff
+        if (
+          sandwich.x > jeff.x &&
+          sandwich.x < jeff.x + jeff.width &&
+          sandwich.y > jeff.y &&
+          sandwich.y < jeff.y + jeff.height
+        ) {
+          score++;
+          jeff.happyTimer = 30;
+          sandwich = null;
+        }
+
+        // Ground hit
+        const groundY = canvas.height - tileHeight;
+        if (sandwich && sandwich.y > groundY) {
+          sandwich = null;
+        }
+      }
+
+      if (shots === 0 && !sandwich) {
+        gameOver = true;
       }
     }
 
-    if (shots === 0 && !sandwich) {
-      gameOver = true;
-    }
+    if (jeff.happyTimer > 0) jeff.happyTimer--;
   }
-
-  if (jeff.happyTimer > 0) jeff.happyTimer--;
 
   draw();
   requestAnimationFrame(update);
 }
 
-// Draw everything
+// =======================
+// DRAW
+// =======================
 function draw() {
- ctx.fillStyle = "#8dc2e3";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Ground
-const groundTile = new Image();
-groundTile.src = "assets/bg-tile.png";
-const tileWidth = 32;
-const tileHeight = 64;
+  // ===================
+  // TITLE SCREEN
+  // ===================
+  if (gameState === "title") {
+    ctx.fillStyle = "#333333";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-// Start drawing tiles aligned to the bottom
-for (let x = 0; x < canvas.width; x += tileWidth) {
-  ctx.drawImage(
-    groundTile,
-    x,
-    canvas.height - tileHeight,
-    tileWidth,
-    tileHeight
-  );
-}
-  // Catapult
+    const imgWidth = 300;
+    const imgHeight = 200;
+    const imgX = (canvas.width - imgWidth) / 2;
+    const imgY = (canvas.height - imgHeight) / 2 - 20;
+
+    ctx.drawImage(titleImage, imgX, imgY, imgWidth, imgHeight);
+
+    // Blinking text
+    const blink = Math.floor(Date.now() / 1000) % 2 === 0;
+
+    if (blink) {
+      ctx.fillStyle = "white";
+      ctx.font = "16px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("PRESS TO START", canvas.width / 2, imgY + imgHeight + 40);
+    }
+
+    ctx.textAlign = "left";
+    return;
+  }
+
+  // ===================
+  // GAME BACKGROUND
+  // ===================
+  ctx.fillStyle = "#8dc2e3";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Ground tiles
+  for (let x = 0; x < canvas.width; x += tileWidth) {
+    ctx.drawImage(
+      groundTile,
+      x,
+      canvas.height - tileHeight,
+      tileWidth,
+      tileHeight
+    );
+  }
+
+  // ===================
+  // CATAPULT
+  // ===================
   ctx.fillStyle = "#00ff88";
   ctx.fillRect(80, 230, 40, 10);
 
-  // Arm
   let armLength = 40;
   let rad = angle * Math.PI / 180;
   let x2 = 100 + Math.cos(rad) * armLength;
@@ -167,32 +240,41 @@ for (let x = 0; x < canvas.width; x += tileWidth) {
   ctx.strokeStyle = "#00ff88";
   ctx.stroke();
 
-  // Sandwich
+  // ===================
+  // SANDWICH
+  // ===================
   if (sandwich) {
     ctx.fillStyle = "#ffcc66";
     ctx.fillRect(sandwich.x, sandwich.y, 10, 6);
   }
 
-  // Jeff
+  // ===================
+  // JEFF
+  // ===================
   ctx.fillStyle = "#00ff88";
   ctx.fillRect(jeff.x, jeff.y, jeff.width, jeff.height);
 
-  // Face
   ctx.fillStyle = "black";
+  ctx.font = "12px monospace";
+
   if (jeff.happyTimer > 0) {
     ctx.fillText(":)", jeff.x, jeff.y - 5);
   } else {
     ctx.fillText(":|", jeff.x, jeff.y - 5);
   }
 
+  // ===================
   // UI
+  // ===================
   ctx.fillStyle = "#00ff88";
+  ctx.font = "14px monospace";
+
   ctx.fillText("SCORE: " + score, 10, 20);
   ctx.fillText("SHOTS: " + shots, 10, 40);
 
   if (gameOver) {
-    ctx.fillText("GAME OVER", 250, 120);
-    ctx.fillText("ENTER INITIALS: " + initials, 200, 150);
+    ctx.fillText("GAME OVER", 240, 120);
+    ctx.fillText("ENTER INITIALS: " + initials, 180, 150);
   }
 }
 
