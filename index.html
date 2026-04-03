@@ -15,6 +15,7 @@
     image-rendering: pixelated;
   }
 </style>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -182,7 +183,7 @@ function draw() {
   // TITLE SCREEN
   // ===================
   if (gameState === "title") {
-    ctx.fillStyle = "#333333";
+    ctx.fillStyle = "#336699";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const imgWidth = 300;
@@ -193,14 +194,14 @@ function draw() {
     ctx.drawImage(titleImage, imgX, imgY, imgWidth, imgHeight);
 
     // Blinking text
-    const blink = Math.floor(Date.now() / 1000) % 2 === 0;
+const blink = Math.floor(Date.now() / 1000) % 2 === 0;
 
-    if (blink) {
-      ctx.fillStyle = "white";
-      ctx.font = "16px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("PRESS TO START", canvas.width / 2, imgY + imgHeight + 40);
-    }
+if (blink) {
+  ctx.fillStyle = "white";
+  ctx.font = "16px 'Press Start 2P'";
+  ctx.textAlign = "center";
+  ctx.fillText("PRESS TO START", canvas.width / 2, imgY + imgHeight + 40);
+}
 
     ctx.textAlign = "left";
     return;
@@ -278,7 +279,9 @@ function draw() {
   }
 }
 
-update();
+document.fonts.ready.then(() => {
+  update();
+});
 </script>
 
 </body>
